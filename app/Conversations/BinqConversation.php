@@ -30,8 +30,12 @@ class BinqConversation extends Conversation
      */
     public function run()
     {
-        $this->firstname = $this->getBot()->getUser()->getFirstName();
-
+        try {
+            $this->firstname = $this->getBot()->getUser()->getFirstName() ?? '';
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            $this->firstname = '';
+        }
         if (!empty($this->command)) {
             return $this->startCommand($this->command);
         }
