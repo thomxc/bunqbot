@@ -34,8 +34,7 @@ class PaymentHistoryConversation extends Conversation
     public function run()
     {
         $this->bunq = app(BunqService::class);
-        $this->monetaryAccounts = $this->bunq->getAccounts();
-        $this->whichBankAccount();
+        $this->printPayments(config('services.bunq.bank_account_id'));
     }
 
     private function whichBankAccount()

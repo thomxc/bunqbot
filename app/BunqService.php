@@ -10,11 +10,13 @@ use bunq\Model\Generated\Endpoint\MonetaryAccount;
 use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Endpoint\RequestInquiry;
+use bunq\Model\Generated\Endpoint\RequestResponse;
 use bunq\Model\Generated\Endpoint\UserCompany;
 use bunq\Model\Generated\Endpoint\UserPerson;
 use bunq\Model\Generated\Object\Amount;
 use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
+use http\Env\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -149,16 +151,19 @@ class BunqService {
         )->getValue();
     }
 
+    /**
+     * @return int
+     */
     public function makePaymentRequest()
     {
-
+        return $this->makeRequest(35, 'thomas@panelinzicht.nl', 'Boodschappen Werk', config('services.bunq.bank_account_id'));
     }
 
     /**
      * @param string $amount
      * @param string $recipient
      * @param string $description
-     * @param MonetaryAccountBank $monetaryAccount
+     * @param int $monetaryAccountId
      *
      * @return int
      */
@@ -166,7 +171,7 @@ class BunqService {
         string $amount,
         string $recipient,
         string $description,
-        MonetaryAccountBank $monetaryAccount
+        int $monetaryAccountId
     ): int {
         // Create a new request and retrieve it's id.
         return RequestInquiry::create(
@@ -174,7 +179,37 @@ class BunqService {
             new Pointer(self::POINTER_TYPE_EMAIL, $recipient),
             $description,
             true,
-            $monetaryAccount->getId()
+            $monetaryAccountId
+        )->getValue();
+    }
+
+    /**
+     * @return array|RequestInquiry[]
+     */
+    public function getAllPaymentRequests()
+    {
+        return RequestInquiry::listing(
+            config('services.bunq.bank_account_id')
+        )->getValue();
+    }
+
+    /**
+     * @param $id
+     * @return RequestInquiry
+     */
+    public function getPaymentRequestById($id)
+    {
+        return RequestInquiry::get($id)->getValue();
+    }
+
+    /**
+     * @param $id
+     * @return array|RequestResponse[]
+     */
+    public function getRequestResponses($id)
+    {
+        return RequestResponse::listing(
+            config('services.bunq.bank_account_id')
         )->getValue();
     }
 

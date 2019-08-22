@@ -124,6 +124,7 @@ class BinqConversation extends Conversation
     private function paymentRequest(BotMan $bot)
     {
         $bot->types();
+        $this->paymentRequestsCommand($bot);
         $bot->ask(Question::create('Weet je zeker dat je een nieuw betaalverzoek wilt maken?')->callbackId('are_you_sure')->addButtons([
             Button::create('Ja ik weet het zeker')->value('yes'),
             Button::create('Nee toch niet')->value('no'),
@@ -133,10 +134,35 @@ class BinqConversation extends Conversation
                     $this->getBot()->reply('Ok, komt ie:');
                     $bunq = app(BunqService::class);
                     $request = $bunq->makePaymentRequest();
+                    $requestInquiry = $bunq->getPaymentRequestById($request);
+                    $this->getBot()->reply($requestInquiry->getBunqmeShareUrl());
+                } elseif (is_numeric($answer->getValue())) {
+                    $this->getBot()->startConversation(new PaymentRequestConversation($answer->getValue()));
                 } else {
                     $this->getBot()->reply('Ok, danniet');
                 }
             }
         });
+    }
+
+    private function paymentRequestsCommand(Botman $bot)
+    {
+        $bunq = app(BunqService::class);
+        $requests = $bunq->getAllPaymentRequests();
+        if (count($requests) > 0) {
+            $bot->reply('De volgende betaalverzoeken staan nog open:');
+            foreach ($requests as $request) {
+                $expires = \Carbon\Carbon::parse($request->getTimeExpiry());
+                $created = \Carbon\Carbon::parse($request->getCreated());
+
+                $bot->ask(Question::create(sprintf('Aangemaakt op: %s Vervalt op: %s', $created, $expires))->callbackId('payment_request_start_conversation')->addButtons([
+                    Button::create('Meer')->value($request->getId())
+                ]), function (Answer $answer) {
+                    if ($answer->isInteractiveMessageReply()) {
+                        $this->getBot()->startConversation(new PaymentRequestConversation($answer->getValue()));
+                    }
+                });
+            }
+        }
     }
 }
