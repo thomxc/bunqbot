@@ -37,6 +37,7 @@ return [
     'bunq' => [
         'url' => env('BUNQ_API_URL', 'https://public-api.sandbox.bunq.com/v1/'),
         'key' => env('BUNQ_API_KEY'),
-        'context_location' => env('BUNQ_CONTEXT_PATH', storage_path('/app/bunq.conf'))
+        'context_location' => env('BUNQ_CONTEXT_PATH', storage_path('/app/bunq.conf')),
+        'bank_account_id' => env('BUNQ_ACCOUNT_ID', 26272),
     ]
 ];

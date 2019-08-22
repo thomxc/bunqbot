@@ -11,8 +11,9 @@
 |
 */
 
+
 Route::get('/', function () {
-    return view('welcome');
+    return view('web_chat');
 });
 
 Route::match(['get', 'post'], '/botman', 'BotManController@handle');

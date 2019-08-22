@@ -5,14 +5,22 @@ namespace App\Services;
 use bunq\Context\ApiContext;
 use bunq\Context\BunqContext;
 use bunq\Exception\BunqException;
+use bunq\Http\Pagination;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
+use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
+use bunq\Model\Generated\Endpoint\Payment;
+use bunq\Model\Generated\Endpoint\RequestInquiry;
 use bunq\Model\Generated\Endpoint\UserCompany;
 use bunq\Model\Generated\Endpoint\UserPerson;
+use bunq\Model\Generated\Object\Amount;
+use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class BunqService {
+    const CURRENCY_TYPE_EUR = 'EUR';
+    const POINTER_TYPE_EMAIL = 'EMAIL';
 
     /**
      * @var UserPerson
@@ -72,15 +80,20 @@ class BunqService {
 
     public function saldo()
     {
-        $monetaryAccountList = MonetaryAccount::listing();
         $listing = [];
-        foreach ($monetaryAccountList->getValue() as $monetaryAccount) {
-            $listing[] = sprintf('%s: %s %d', $monetaryAccount->getMonetaryAccountBank()->getDescription(), $monetaryAccount->getMonetaryAccountBank()->getBalance()->getCurrency(), $monetaryAccount->getMonetaryAccountBank()->getBalance()->getValue());
-        }
+        $monetaryAccount = $this->getAccountById(config('services.bunq.bank_account_id'));
+        $listing[] = sprintf('%s: %s %d', $monetaryAccount->getDescription(), $monetaryAccount->getBalance()->getCurrency(), $monetaryAccount->getBalance()->getValue());
 
         return $listing;
     }
 
+    /**
+     * @return array|MonetaryAccount[]
+     */
+    public function getAccounts()
+    {
+        return MonetaryAccount::listing()->getValue();
+    }
     /**
      * @return array
      */
@@ -89,10 +102,80 @@ class BunqService {
         $monetaryAccountList = MonetaryAccount::listing();
         $listing = [];
         foreach ($monetaryAccountList->getValue() as $monetaryAccount) {
-            $listing[] = $monetaryAccount->getMonetaryAccountBank()->getDescription();
+            $listing[] = sprintf('%s - %s', $monetaryAccount->getMonetaryAccountBank()->getId(), $monetaryAccount->getMonetaryAccountBank()->getDescription());
         }
 
         return $listing;
+    }
+
+    /**
+     * @param $id
+     * @return bool|MonetaryAccountBank
+     */
+    public function getAccountById($id)
+    {
+        $accounts = $this->getAccounts();
+        foreach ($accounts as $account) {
+            if ($account->getMonetaryAccountBank()->getId() == $id) {
+                return $account->getMonetaryAccountBank();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param $id
+     * @return array|Payment[]
+     */
+    public function getAllPaymentByAccountId($id)
+    {
+        $account = $this->getAccountById($id);
+        return $this->getAllPayment($account);
+    }
+
+    /**
+     * @param MonetaryAccountBank $monetaryAccount
+     * @param int $count
+     *
+     * @return Payment[]
+     */
+    public function getAllPayment(MonetaryAccountBank $monetaryAccount, int $count = 10): array
+    {
+        $pagination = new Pagination();
+        $pagination->setCount($count);
+        return Payment::listing(
+            $monetaryAccount->getId(),
+            $pagination->getUrlParamsCountOnly()
+        )->getValue();
+    }
+
+    public function makePaymentRequest()
+    {
+
+    }
+
+    /**
+     * @param string $amount
+     * @param string $recipient
+     * @param string $description
+     * @param MonetaryAccountBank $monetaryAccount
+     *
+     * @return int
+     */
+    public function makeRequest(
+        string $amount,
+        string $recipient,
+        string $description,
+        MonetaryAccountBank $monetaryAccount
+    ): int {
+        // Create a new request and retrieve it's id.
+        return RequestInquiry::create(
+            new Amount($amount, self::CURRENCY_TYPE_EUR),
+            new Pointer(self::POINTER_TYPE_EMAIL, $recipient),
+            $description,
+            true,
+            $monetaryAccount->getId()
+        )->getValue();
     }
 
     /**

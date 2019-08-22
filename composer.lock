@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67565b2b9eed4f3e7ecf54e697834d4f",
+    "content-hash": "0323597381ab0485cf584cc00bf22631",
     "packages": [
         {
             "name": "botman/botman",
@@ -82,6 +82,64 @@
                 "chatbot"
             ],
             "time": "2018-08-09T13:15:19+00:00"
+        },
+        {
+            "name": "botman/driver-botframework",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/botman/driver-botframework.git",
+                "reference": "9c3fc249f6b66e5f3a548c3bd6cb628772f6862d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/botman/driver-botframework/zipball/9c3fc249f6b66e5f3a548c3bd6cb628772f6862d",
+                "reference": "9c3fc249f6b66e5f3a548c3bd6cb628772f6862d",
+                "shasum": ""
+            },
+            "require": {
+                "botman/botman": "~2.0",
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "botman/studio-addons": "~1.0",
+                "ext-curl": "*",
+                "illuminate/contracts": "~5.5.0",
+                "mockery/mockery": "dev-master",
+                "phpunit/phpunit": "~5.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "BotMan\\Drivers\\BotFramework\\Providers\\BotFrameworkServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "BotMan\\Drivers\\BotFramework\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marcel Pociot",
+                    "email": "m.pociot@gmail.com"
+                }
+            ],
+            "description": "Microsoft Bot Framework driver for BotMan",
+            "homepage": "http://github.com/botman/driver-botframework",
+            "keywords": [
+                "Botman",
+                "bot",
+                "bot framework",
+                "botframework"
+            ],
+            "time": "2018-01-30T16:22:33+00:00"
         },
         {
             "name": "botman/driver-web",

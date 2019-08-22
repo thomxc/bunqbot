@@ -1,0 +1,1 @@
+<iframe src='https://webchat.botframework.com/embed/inzicht_bunq_bot?s={{config('botman.botframework.app_key')}}'  style='min-width: 400px; width: 100%; min-height: 500px;'></iframe>
