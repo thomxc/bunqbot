@@ -11,6 +11,7 @@ use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class BinqConversation extends Conversation
 {
@@ -72,6 +73,9 @@ class BinqConversation extends Conversation
             case 'init':
                 $this->initCommand($bot);
                 break;
+            case 'reinit':
+                $this->reinitCommand($bot);
+                break;
             case 'rekeningoverzicht':
                 $this->paymentsCommand($bot);
                 break;
@@ -116,7 +120,16 @@ class BinqConversation extends Conversation
         } else {
             $bunq = app(BunqService::class);
             $bunq->init($bot);
+            $bot->reply('App is geinitialiseerd');
         }
+    }
+
+    private function reinitCommand(BotMan $bot)
+    {
+        if (File::exists(config('services.bunq.context_location'))) {
+            $file = File::delete(config('services.bunq.context_location'));
+        }
+        $this->initCommand($bot);
     }
 
     private function paymentsCommand(BotMan $bot)

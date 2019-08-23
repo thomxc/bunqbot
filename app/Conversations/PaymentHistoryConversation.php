@@ -23,10 +23,6 @@ class PaymentHistoryConversation extends Conversation
      * @var \Illuminate\Foundation\Application
      */
     private $bunq;
-    /**
-     * @var Payment[]
-     */
-    private $payments;
 
     /**
      * Start the conversation
@@ -52,20 +48,29 @@ class PaymentHistoryConversation extends Conversation
             return $this->ask($question, function (Answer $answer) {
                 if ($answer->isInteractiveMessageReply()) {
                     $id = $answer->getValue();
-                    $this->printPayments($id);
+                    $this->printPayments($this->bunq->getAllPaymentByAccountId($id));
                 }
             });
         } else {
-            $this->printPayments($this->monetaryAccounts[0]->getMonetaryAccountBank()->getId());
+            $this->printPayments($this->bunq->getAllPaymentByAccountId(config('services.bunq.bank_account_id')));
         }
     }
 
-    private function printPayments($id)
+    /**
+     * @param Payment[] $payments
+     */
+    private function printPayments($payments)
     {
-        $this->payments = $this->bunq->getAllPaymentByAccountId($id);
-        if (count($this->payments) > 0) {
-            foreach ($this->payments as $payment) {
-                $this->say(sprintf('%s - %s: %s', $payment->getDescription(), $payment->getType(), $payment->getAmount()));
+        if (count($payments) > 0) {
+            $payments = collect($payments);
+            $payments = $payments->sortBy(function (Payment $payment) { return $payment->getCreated(); });
+            foreach ($payments as $payment) {
+                if ($payment->getAmount()->getValue() > 0) {
+                    $emoji = '⬆️';
+                } else {
+                    $emoji = '⬇️';
+                }
+                $this->say(sprintf('%s %s: *%s* - %s - %s%s', $emoji, \Carbon\Carbon::parse($payment->getCreated())->format('d M-Y'), $payment->getAlias()->getDisplayName(), $payment->getDescription(), '€', $payment->getAmount()->getValue()));
             }
         } else {
             $this->say('Geen betalingen gevonden..');

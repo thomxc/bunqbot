@@ -16,6 +16,7 @@ use bunq\Model\Generated\Endpoint\UserPerson;
 use bunq\Model\Generated\Object\Amount;
 use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
+use Hamcrest\Core\IsNotTest;
 use http\Env\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -131,22 +132,21 @@ class BunqService {
      */
     public function getAllPaymentByAccountId($id)
     {
-        $account = $this->getAccountById($id);
-        return $this->getAllPayment($account);
+        return $this->getAllPayment($id);
     }
 
     /**
-     * @param MonetaryAccountBank $monetaryAccount
+     * @param int $monetaryAccount
      * @param int $count
      *
      * @return Payment[]
      */
-    public function getAllPayment(MonetaryAccountBank $monetaryAccount, int $count = 10): array
+    public function getAllPayment($monetaryAccount, int $count = 100): array
     {
         $pagination = new Pagination();
         $pagination->setCount($count);
         return Payment::listing(
-            $monetaryAccount->getId(),
+            $monetaryAccount,
             $pagination->getUrlParamsCountOnly()
         )->getValue();
     }
@@ -156,7 +156,7 @@ class BunqService {
      */
     public function makePaymentRequest()
     {
-        return $this->makeRequest(35, 'thomas@panelinzicht.nl', 'Boodschappen Werk', config('services.bunq.bank_account_id'));
+        return $this->makeRequest(35, 'sugardaddy@bunq.com', 'Boodschappen Werk', config('services.bunq.bank_account_id'));
     }
 
     /**
@@ -210,6 +210,29 @@ class BunqService {
     {
         return RequestResponse::listing(
             config('services.bunq.bank_account_id')
+        )->getValue();
+    }
+
+    /**
+     * @param string $amount
+     * @param string $recipient
+     * @param string $description
+     * @param int $monetaryAccount
+     *
+     * @return int
+     */
+    public function makePayment(
+        string $amount,
+        string $recipient,
+        string $description,
+        $monetaryAccount
+    ): int {
+        // Create a new payment and retrieve it's id.
+        return Payment::create(
+            new Amount($amount, self::CURRENCY_TYPE_EUR),
+            new Pointer(self::POINTER_TYPE_EMAIL, $recipient),
+            $description,
+            $monetaryAccount
         )->getValue();
     }
 
