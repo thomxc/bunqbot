@@ -85,8 +85,11 @@ class BunqService {
     {
         $listing = [];
         $monetaryAccount = $this->getAccountById(config('services.bunq.bank_account_id'));
-        $listing[] = sprintf('%s: %s %d', $monetaryAccount->getDescription(), $monetaryAccount->getBalance()->getCurrency(), $monetaryAccount->getBalance()->getValue());
-
+        if ($monetaryAccount) {
+            $listing[] = sprintf('%s: %s %d', $monetaryAccount->getDescription(), $monetaryAccount->getBalance()->getCurrency(), $monetaryAccount->getBalance()->getValue());
+        } else {
+            $listing[] = sprintf('Er is iets fout gegaan..');
+        }
         return $listing;
     }
 
